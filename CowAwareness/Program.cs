@@ -31,8 +31,10 @@
                      menu.AddGroupLabel("Credits");
                      menu.AddLabel("This project comes from lots of different sources");
                      menu.AddLabel(" if you think I should credit you, message me on EB");
-                     menu.AddLabel("- Lizzaran for SFXUtility: got a lots of nice things from him");
+                     menu.AddLabel("- Lizzaran for SFXUtility, got lots of nice things from him");
+                     menu.AddLabel("- Kurttuu for the thread design");
                      menu.AddLabel("- Addon by strcow from elobuddy.net");
+                     menu.AddLabel("https://www.elobuddy.net/topic/8526-cowawareness-utility-aio-my-way-always-updated");
                  };
         }
     }
