@@ -3,11 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Drawing;
-    using System.Linq;
 
     using CowLibrary.Addons;
+    using CowLibrary.Utilities;
 
     using EloBuddy;
+    using EloBuddy.SDK.Menu.Values;
     using EloBuddy.SDK.Rendering;
 
     using Color = System.Drawing.Color;
@@ -40,7 +41,28 @@
         protected override void Initialize()
         {
             this.Menu.AddLabel("Tracks recalls and teleports");
+
+            this.Menu.AddSeparator();
+
+            this.Menu.AddLabel("Location");
+
+            this.Menu.Add("x", new Slider("X", Drawing.Width - 250, 0, Drawing.Width));
+            this.Menu.Add("y", new Slider("Y", Drawing.Height - 400, 0, Drawing.Height));
+
             this.text = new Text(string.Empty, new Font(FontFamily.GenericSansSerif, 10f, FontStyle.Bold));
+        }
+
+        private static int GetRecallTime(AIHeroClient hero)
+        {
+            var buffHerald = hero.GetBuff("exaltedwithminibaronnashor");
+            var buffNashor = hero.GetBuff("exaltedwithbaronnashor");
+
+            if (buffHerald != null || buffNashor != null)
+            {
+                return 4000;
+            }
+
+            return 8000;
         }
 
         private void OnTeleport(Obj_AI_Base sender, GameObjectTeleportEventArgs args)
@@ -54,13 +76,13 @@
 
             if (args.RecallName != string.Empty)
             {
-                this.teleports.Add(new TeleportInfo(hero, Game.Time + GetRecallTime(args.RecallName)));
+                this.teleports.Add(new TeleportInfo(hero, Environment.TickCount + GetRecallTime(hero)));
                 return;
             }
 
             foreach (var tp in this.teleports)
             {
-                if (Math.Abs(Game.Time - tp.EndTime) < 0.02)
+                if (Environment.TickCount >= tp.EndTime)
                 {
                     tp.Finished = true;
                 }
@@ -69,63 +91,38 @@
                     tp.Aborted = true;
                 }
 
-                System.Threading.Timer timer = null;
-                timer = new System.Threading.Timer(cb => 
-                {
-                    this.teleports.Remove(tp);
-                    if (timer != null)
+                Scheduler.Execute(
+                    () =>
                     {
-                        timer.Dispose();
-                    }
-                },
-                null, 
-                3000, 
-                System.Threading.Timeout.Infinite);
+                        this.teleports.Remove(tp);
+                    },
+                    3000);
             }
         }
 
         private void Drawing_OnEndScene(EventArgs args)
         {
-            int y = 400;
+            int x = this["x"].Cast<Slider>().CurrentValue;
+            int y = this["y"].Cast<Slider>().CurrentValue;
+            
             foreach (var tp in this.teleports)
             {
-                var remaining = tp.EndTime - Game.Time;
+                var remaining = (tp.EndTime - Environment.TickCount) / 1000;
 
                 if (tp.Finished)
                 {
-                    this.text.Draw(string.Format("{0} finished recalling", tp.Hero.ChampionName), Color.Lime, 250, y);
+                    this.text.Draw(string.Format("{0} finished recalling", tp.Hero.ChampionName), Color.Lime, x, y);
                 }
                 else if (tp.Aborted)
                 {
-                    this.text.Draw(string.Format("{0} aborted recalling", tp.Hero.ChampionName), Color.Red, 250, y);
+                    this.text.Draw(string.Format("{0} aborted recalling", tp.Hero.ChampionName), Color.Red, x, y);
                 }
                 else
                 {
-                    this.text.Draw(string.Format("{0} recalling {1:0.00} ({2}%)", tp.Hero.ChampionName, remaining, tp.Hero.HealthPercent), Color.White, 250, y);
+                    this.text.Draw(string.Format("{0} recalling {1:0.00} ({2}%)", tp.Hero.ChampionName, remaining, (int)tp.Hero.HealthPercent), Color.White, x, y);
                 }
                 
                 y += 20;
-            }
-        }
-
-        public static int GetRecallTime(string recallName)
-        {
-            switch (recallName.ToLower())
-            {
-                case "odinrecall":
-                    return 4500;
-                case "odinrecallimproved":
-                    return 4000;
-                case "recall":
-                    return 8000;
-                case "recallimproved":
-                    return 7000;
-                case "superrecallimproved":
-                    return 4000;
-                case "superrecall":
-                    return 4000;
-                default:
-                    return 4500;
             }
         }
 
