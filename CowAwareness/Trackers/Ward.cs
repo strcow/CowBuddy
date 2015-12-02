@@ -60,10 +60,10 @@
                 return;
             }
 
-            /*if (ward.IsAlly)
+            if (ward.IsAlly)
             {
                 return;
-            }*/
+            }
 
             switch (ward.BaseSkinName)
             {

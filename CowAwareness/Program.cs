@@ -15,6 +15,7 @@
             var addon = new Addon("CowAwareness")
                 .Add(new Clock())
                 .Add(new Clone())
+                .Add(new TowerRange())
                 .Add(new Gank())
                 .Add(new Cooldown())
                 .Add(new Ward())
@@ -23,7 +24,7 @@
             addon.MenuInitialized += menu =>
                  {
                      menu.AddGroupLabel("Version");
-                     menu.AddLabel("release 1.0.0");    
+                     menu.AddLabel("release 1.0.1");    
 
                      menu.AddSeparator();
                      menu.AddGroupLabel("Todo List");
@@ -35,6 +36,7 @@
                      menu.AddLabel(" if you think I should credit you, message me on EB");
                      menu.AddLabel("- Lizzaran for SFXUtility, got lots of nice things from him");
                      menu.AddLabel("- Kurttuu for the thread design");
+                     menu.AddLabel("- MrArticuno's addons code (with small improvements by me)");
                      menu.AddLabel("- Addon by strcow from elobuddy.net");
                      menu.AddLabel("https://www.elobuddy.net/topic/8526-cowawareness-utility-aio-my-way-always-updated");
                  };

@@ -78,8 +78,10 @@
     <Compile Include="Detectors\Gank.cs" />
     <Compile Include="Drawings\Clock.cs" />
     <Compile Include="Detectors\Clone.cs" />
+    <Compile Include="Drawings\TowerRange.cs" />
     <Compile Include="Drawings\WatermarkDisabler.cs" />
     <Compile Include="Trackers\Cooldown.cs" />
+    <Compile Include="Trackers\Teleport.cs" />
     <Compile Include="Trackers\Ward.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
