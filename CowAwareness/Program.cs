@@ -1,10 +1,12 @@
 ﻿namespace CowAwareness
 {
-    using CowAwareness.Detectors;
-    using CowAwareness.Drawings;
-    using CowAwareness.Trackers;
-
     using CowLibrary.Addons;
+
+    using Detectors;
+
+    using Drawings;
+
+    using Trackers;
 
     public class Program
     {

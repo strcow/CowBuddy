@@ -1,6 +1,8 @@
 ﻿namespace CowAwareness.Trackers
 {
+    using System;
     using System.Collections.Generic;
+    using System.Drawing;
     using System.Linq;
 
     using CowLibrary.Addons;
@@ -12,10 +14,13 @@
     using SharpDX;
 
     using Color = System.Drawing.Color;
+    using Font = System.Drawing.Font;
 
     public class Ward : Feature, IToggleFeature
     {
         private static List<WardInfo> wards = new List<WardInfo>();
+
+        private Text text;
 
         public override string Name
         {
@@ -43,61 +48,47 @@
         {
             this.Menu.Add("timer", new CheckBox("Draw remaining time"));
             this.Menu.Add("range", new KeyBind("Draw wards range", false, KeyBind.BindTypes.HoldActive, 'Z'));
+            this.text = new Text(string.Empty, new Font(FontFamily.GenericSansSerif, 11f, FontStyle.Bold));
         }
 
-        private void GameObject_OnCreate(GameObject sender, System.EventArgs args)
+        private void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
-            if (!(sender is Obj_AI_Minion) || !sender.Name.Contains("Ward"))
+            var ward = sender as Obj_AI_Minion;
+
+            if (ward == null || !sender.Name.ToLower().Contains("ward"))
             {
                 return;
             }
 
-            var ward = (Obj_AI_Minion)sender;
-
-            if (ward.IsAlly)
+            /*if (ward.IsAlly)
             {
                 return;
-            }
+            }*/
 
             switch (ward.BaseSkinName)
             {
-                case "YellowTrinket":
-                    wards.Add(new WardInfo(ward.Name, false, true, Game.Time + 60, ward.Position, Color.Lime));
-                    break;
-                case "YellowTrinketUpgrade":
-                    wards.Add(new WardInfo(ward.Name, false, true, Game.Time + 120, ward.Position, Color.Lime));
-                    break;
                 case "VisionWard":
-                    wards.Add(new WardInfo(ward.Name, true, true, 0, ward.Position, Color.DeepPink));
+                    wards.Add(new WardInfo(ward, true));
                     break;
-                case "SightWard":
-                    wards.Add(new WardInfo(ward.Name, false, true, Game.Time + 180, ward.Position, Color.Lime));
+                default:
+                    wards.Add(new WardInfo(ward, false));
                     break;
             }
         }
 
-        private void GameObject_OnDelete(GameObject sender, System.EventArgs args)
+        private void GameObject_OnDelete(GameObject sender, EventArgs args)
         {
-            if (!(sender is Obj_AI_Minion) || !sender.Name.Contains("Ward"))
-            {
-                return;
-            }
+            var ward = sender as Obj_AI_Minion;
 
-            var ward = (Obj_AI_Minion)sender;
+            var wardInfo = wards.FirstOrDefault(w => w.Ward == ward);
 
-            if (ward.IsAlly)
-            {
-                return;
-            }
-
-            var wardInfo = wards.Where(w => w.Available).FirstOrDefault(w => w.Position == ward.Position);
             if (wardInfo != null)
             {
                 wardInfo.Available = false;
             }
         }
 
-        private void Drawing_OnDraw(System.EventArgs args)
+        private void Drawing_OnDraw(EventArgs args)
         {
             var removeList = new List<WardInfo>();
 
@@ -109,18 +100,42 @@
                     continue;
                 }
 
-                var remaining = wardInfo.DeleteTimer - Game.Time;
+                var buff = wardInfo.Ward.Buffs.FirstOrDefault();
+
+                if (buff == null)
+                {
+                    removeList.Add(wardInfo);
+                    continue;
+                }
+
+                var remaining = buff.EndTime - Game.Time;
 
                 if (remaining > 0 || wardInfo.IsPink)
                 {
-                    var fancytimer = string.Format("{0:0}", remaining);
                     int radius = this["range"].Cast<KeyBind>().CurrentValue ? 1100 : 60;
                     
                     new Circle { Color = wardInfo.Color, Radius = radius, BorderWidth = 1f }.Draw(wardInfo.Position);
 
-                    if (this["timer"].Cast<CheckBox>().CurrentValue && !wardInfo.IsPink)
+                    if (this["timer"].Cast<CheckBox>().CurrentValue)
                     {
-                        Drawing.DrawText(Drawing.WorldToScreen(wardInfo.Position), Color.White, fancytimer, 50);
+                        var location = Drawing.WorldToScreen(wardInfo.Position);
+
+                        if (wardInfo.IsPink)
+                        {
+                            this.text.Draw(
+                                ((AIHeroClient)buff.Caster).ChampionName,
+                                Color.White,
+                                (int)location.X,
+                                (int)location.Y);
+                        }
+                        else
+                        {
+                            this.text.Draw(
+                                string.Format("{0:0} ({1})", remaining, ((AIHeroClient)buff.Caster).ChampionName),
+                                Color.White,
+                                (int)location.X,
+                                (int)location.Y);
+                        }
                     }
                 }
                 else
@@ -137,23 +152,20 @@
 
         internal class WardInfo
         {
-            public WardInfo(string name, bool isPink, bool available, float deleteTimer, Vector3 position, Color color)
+            public WardInfo(Obj_AI_Minion ward, bool isPink)
             {
-                this.Name = name;
+                this.Ward = ward;
+                this.Color = isPink ? Color.Magenta : Color.Lime;
+                this.Available = true;
+                this.Position = ward.Position;
                 this.IsPink = isPink;
-                this.DeleteTimer = deleteTimer;
-                this.Position = position;
-                this.Color = color;
-                this.Available = available;
             }
 
-            public string Name { get; set; }
+            public Obj_AI_Minion Ward { get; set; }
 
             public bool IsPink { get; set; }
 
             public Color Color { get; set; }
-
-            public float DeleteTimer { get; set; }
 
             public Vector3 Position { get; set; }
 
