@@ -116,7 +116,7 @@
             foreach (var obj in GankObjects.Where(c => !c.Hero.IsDead && c.Hero.IsValidTarget(this.Range) && c.LastTrigger + this.Duration > Game.Time))
             {
                 Drawing.DrawLine(ObjectManager.Player.Position.WorldToScreen(), obj.Hero.Position.WorldToScreen(), 8f, Color.FromArgb(80, obj.Color));
-                if (this.Ping && this.lastPing + this.Cooldown * 1000 < Environment.TickCount)
+                if (this.Ping && obj.Hero.IsEnemy && this.lastPing + this.Cooldown * 1000 < Environment.TickCount)
                 {
                     TacticalMap.ShowPing(PingCategory.Danger, ObjectManager.Player.Position, true);
                     this.lastPing = Environment.TickCount;
