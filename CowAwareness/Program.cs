@@ -21,7 +21,7 @@
             addon.MenuInitialized += menu =>
                  {
                      menu.AddGroupLabel("Version");
-                     menu.AddLabel("release 1.0.0");
+                     menu.AddLabel("release 1.0.0");    
 
                      menu.AddSeparator();
                      menu.AddGroupLabel("Todo List");
