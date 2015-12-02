@@ -17,6 +17,7 @@
                 .Add(new Clone())
                 .Add(new TowerRange())
                 .Add(new Gank())
+                // .Add(new Teleport())
                 .Add(new Cooldown())
                 .Add(new Ward())
                 .Add(new WatermarkDisabler());
