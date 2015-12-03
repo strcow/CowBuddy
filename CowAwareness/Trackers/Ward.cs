@@ -8,6 +8,7 @@
     using CowLibrary.Addons;
 
     using EloBuddy;
+    using EloBuddy.SDK;
     using EloBuddy.SDK.Menu.Values;
     using EloBuddy.SDK.Rendering;
 
@@ -60,10 +61,11 @@
                 return;
             }
 
+            /*
             if (ward.IsAlly)
             {
                 return;
-            }
+            }*/
 
             switch (ward.BaseSkinName)
             {
@@ -120,18 +122,10 @@
                     {
                         var location = Drawing.WorldToScreen(wardInfo.Position);
 
-                        if (wardInfo.IsPink)
+                        if (!wardInfo.IsPink)
                         {
                             this.text.Draw(
-                                ((AIHeroClient)buff.Caster).ChampionName,
-                                Color.White,
-                                (int)location.X,
-                                (int)location.Y);
-                        }
-                        else
-                        {
-                            this.text.Draw(
-                                string.Format("{0:0} ({1})", remaining, ((AIHeroClient)buff.Caster).ChampionName),
+                                string.Format("{0:0}", remaining),
                                 Color.White,
                                 (int)location.X,
                                 (int)location.Y);

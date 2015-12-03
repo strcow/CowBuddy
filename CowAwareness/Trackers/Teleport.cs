@@ -49,6 +49,10 @@
             this.Menu.Add("x", new Slider("X", Drawing.Width - 250, 0, Drawing.Width));
             this.Menu.Add("y", new Slider("Y", Drawing.Height - 400, 0, Drawing.Height));
 
+            this.Menu.Add("allies", new CheckBox("Track Allies", false));
+            this.Menu.Add("self", new CheckBox("Track Self", false));
+            this.Menu.Add("enemies", new CheckBox("Track Enemies", false));
+
             this.text = new Text(string.Empty, new Font(FontFamily.GenericSansSerif, 10f, FontStyle.Bold));
         }
 
@@ -70,6 +74,21 @@
             var hero = sender as AIHeroClient;
 
             if (hero == null)
+            {
+                return;
+            }
+
+            if (hero.IsMe && !this["self"].Cast<CheckBox>().CurrentValue)
+            {
+                return;
+            }
+
+            if (hero.IsEnemy && !this["enemies"].Cast<CheckBox>().CurrentValue)
+            {
+                return;
+            }
+
+            if (hero.IsAlly && !hero.IsMe && !this["allies"].Cast<CheckBox>().CurrentValue)
             {
                 return;
             }
