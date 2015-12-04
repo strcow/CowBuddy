@@ -8,6 +8,7 @@
     using CowAwareness.Features;
 
     using EloBuddy;
+    using EloBuddy.SDK;
     using EloBuddy.SDK.Menu.Values;
     using EloBuddy.SDK.Rendering;
 
@@ -16,7 +17,7 @@
     using Color = System.Drawing.Color;
 
     public class Ward : Feature, IToggleFeature
-    {
+    { 
         #region Static Fields
 
         private static List<WardInfo> wards = new List<WardInfo>();
@@ -45,14 +46,15 @@
 
         public void Disable()
         {
-            Drawing.OnDraw -= this.Drawing_OnDraw;
+            //Drawing.OnDraw -= this.Drawing_OnDraw;
+            Drawing.OnEndScene -= this.DrawWards;
             GameObject.OnCreate -= this.GameObject_OnCreate;
             GameObject.OnDelete -= this.GameObject_OnDelete;
         }
 
         public void Enable()
         {
-            Drawing.OnDraw += this.Drawing_OnDraw;
+            Drawing.OnEndScene += this.DrawWards;
             GameObject.OnCreate += this.GameObject_OnCreate;
             GameObject.OnDelete += this.GameObject_OnDelete;
         }
@@ -68,7 +70,19 @@
             this.text = new Text(string.Empty, new Font(FontFamily.GenericSansSerif, 11f, FontStyle.Bold));
         }
 
-        private void Drawing_OnDraw(EventArgs args)
+        private static void DrawWardMinimap(Vector3 center, Color color)
+        {
+            var centerMap = center.WorldToMinimap();
+            var a = new Vector2(centerMap.X - 5, centerMap.Y);
+            var b = new Vector2(centerMap.X + 5, centerMap.Y);
+            var c = new Vector2(centerMap.X, centerMap.Y + 10);
+
+            Drawing.DrawLine(a, b, 2f, color);
+            Drawing.DrawLine(b, c, 2f, color);
+            Drawing.DrawLine(c, a, 2f, color);
+        }
+
+        private void DrawWards(EventArgs args)
         {
             var removeList = new List<WardInfo>();
 
@@ -95,11 +109,13 @@
                     var radius = this["range"].Cast<KeyBind>().CurrentValue ? 1100 : 60;
 
                     new Circle { Color = wardInfo.Color, Radius = radius, BorderWidth = 1f }.Draw(wardInfo.Position);
+                    DrawWardMinimap(wardInfo.Position, wardInfo.Color);
+                    //this.text.Draw(".", wardInfo.Color, (int)mapPos.X, (int)mapPos.Y);
 
                     if (this["timer"].Cast<CheckBox>().CurrentValue)
                     {
                         var location = Drawing.WorldToScreen(wardInfo.Position);
-
+                        
                         if (!wardInfo.IsPink)
                         {
                             this.text.Draw(
