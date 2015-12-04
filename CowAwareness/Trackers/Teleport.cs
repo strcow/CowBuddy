@@ -4,20 +4,24 @@
     using System.Collections.Generic;
     using System.Drawing;
 
-    using CowLibrary.Addons;
-    using CowLibrary.Utilities;
+    using CowAwareness.Features;
 
     using EloBuddy;
+    using EloBuddy.SDK;
     using EloBuddy.SDK.Menu.Values;
     using EloBuddy.SDK.Rendering;
 
-    using Color = System.Drawing.Color;
-    using Font = System.Drawing.Font;
-
     public class Teleport : Feature, IToggleFeature
     {
+        #region Fields
+
         private readonly HashSet<TeleportInfo> teleports = new HashSet<TeleportInfo>();
+
         private Text text;
+
+        #endregion
+
+        #region Public Properties
 
         public override string Name
         {
@@ -27,16 +31,24 @@
             }
         }
 
+        #endregion
+
+        #region Public Methods and Operators
+
+        public void Disable()
+        {
+            Obj_AI_Base.OnTeleport += this.OnTeleport;
+        }
+
         public void Enable()
         {
             Obj_AI_Base.OnTeleport += this.OnTeleport;
             Drawing.OnEndScene += this.Drawing_OnEndScene;
         }
 
-        public void Disable()
-        {
-            Obj_AI_Base.OnTeleport += this.OnTeleport;
-        }
+        #endregion
+
+        #region Methods
 
         protected override void Initialize()
         {
@@ -67,6 +79,40 @@
             }
 
             return 8000;
+        }
+
+        private void Drawing_OnEndScene(EventArgs args)
+        {
+            var x = this["x"].Cast<Slider>().CurrentValue;
+            var y = this["y"].Cast<Slider>().CurrentValue;
+
+            foreach (var tp in this.teleports)
+            {
+                var remaining = (tp.EndTime - Environment.TickCount) / 1000;
+
+                if (tp.Finished)
+                {
+                    this.text.Draw(string.Format("{0} finished recalling", tp.Hero.ChampionName), Color.Lime, x, y);
+                }
+                else if (tp.Aborted)
+                {
+                    this.text.Draw(string.Format("{0} aborted recalling", tp.Hero.ChampionName), Color.Red, x, y);
+                }
+                else
+                {
+                    this.text.Draw(
+                        string.Format(
+                            "{0} recalling {1:0.00} ({2}%)",
+                            tp.Hero.ChampionName,
+                            remaining,
+                            (int)tp.Hero.HealthPercent),
+                        Color.White,
+                        x,
+                        y);
+                }
+
+                y += 20;
+            }
         }
 
         private void OnTeleport(Obj_AI_Base sender, GameObjectTeleportEventArgs args)
@@ -110,43 +156,16 @@
                     tp.Aborted = true;
                 }
 
-                Scheduler.Execute(
-                    () =>
-                    {
-                        this.teleports.Remove(tp);
-                    },
-                    3000);
+                Core.DelayAction(() => { this.teleports.Remove(tp); }, 3000);
             }
         }
 
-        private void Drawing_OnEndScene(EventArgs args)
-        {
-            int x = this["x"].Cast<Slider>().CurrentValue;
-            int y = this["y"].Cast<Slider>().CurrentValue;
-            
-            foreach (var tp in this.teleports)
-            {
-                var remaining = (tp.EndTime - Environment.TickCount) / 1000;
-
-                if (tp.Finished)
-                {
-                    this.text.Draw(string.Format("{0} finished recalling", tp.Hero.ChampionName), Color.Lime, x, y);
-                }
-                else if (tp.Aborted)
-                {
-                    this.text.Draw(string.Format("{0} aborted recalling", tp.Hero.ChampionName), Color.Red, x, y);
-                }
-                else
-                {
-                    this.text.Draw(string.Format("{0} recalling {1:0.00} ({2}%)", tp.Hero.ChampionName, remaining, (int)tp.Hero.HealthPercent), Color.White, x, y);
-                }
-                
-                y += 20;
-            }
-        }
+        #endregion
 
         private class TeleportInfo
         {
+            #region Constructors and Destructors
+
             public TeleportInfo(AIHeroClient hero, float endTime)
             {
                 this.Hero = hero;
@@ -155,13 +174,19 @@
                 this.Finished = false;
             }
 
-            public AIHeroClient Hero { get; private set; }
+            #endregion
 
-            public float EndTime { get; private set; }
+            #region Public Properties
 
             public bool Aborted { get; set; }
 
+            public float EndTime { get; private set; }
+
             public bool Finished { get; set; }
+
+            public AIHeroClient Hero { get; private set; }
+
+            #endregion
         }
     }
 }

@@ -3,16 +3,30 @@
     using System;
     using System.Drawing;
 
-    using CowLibrary.Addons;
+    using CowAwareness.Features;
 
     using EloBuddy;
     using EloBuddy.SDK.Menu.Values;
 
     public class Clock : Feature, IToggleFeature
     {
+        #region Public Properties
+
         public override string Name
         {
-            get { return "Clock"; }
+            get
+            {
+                return "Clock";
+            }
+        }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        public void Disable()
+        {
+            Drawing.OnDraw -= this.Drawing_OnDraw;
         }
 
         public void Enable()
@@ -20,10 +34,9 @@
             Drawing.OnDraw += this.Drawing_OnDraw;
         }
 
-        public void Disable()
-        {
-            Drawing.OnDraw -= this.Drawing_OnDraw;
-        }
+        #endregion
+
+        #region Methods
 
         protected override void Initialize()
         {
@@ -40,5 +53,7 @@
                 Color.Gold,
                 DateTime.Now.ToShortTimeString());
         }
+
+        #endregion
     }
 }

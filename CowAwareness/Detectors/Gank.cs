@@ -5,7 +5,7 @@
     using System.Drawing;
     using System.Linq;
 
-    using CowLibrary.Addons;
+    using CowAwareness.Features;
 
     using EloBuddy;
     using EloBuddy.SDK;
@@ -13,23 +13,33 @@
 
     public class Gank : Feature, IToggleFeature
     {
+        #region Static Fields
+
         private static readonly HashSet<GankObject> GankObjects = new HashSet<GankObject>();
 
+        #endregion
+
+        #region Fields
+
         private float lastCheck;
+
         private float lastPing;
+
+        #endregion
+
+        #region Public Properties
 
         public override string Name
         {
-            get { return "Gank"; }
-        }
-
-        private bool Ping
-        {
             get
             {
-                return this["ping"].Cast<CheckBox>().CurrentValue;
+                return "Gank";
             }
         }
+
+        #endregion
+
+        #region Properties
 
         private int Cooldown
         {
@@ -47,6 +57,14 @@
             }
         }
 
+        private bool Ping
+        {
+            get
+            {
+                return this["ping"].Cast<CheckBox>().CurrentValue;
+            }
+        }
+
         private int Range
         {
             get
@@ -55,17 +73,25 @@
             }
         }
 
-        public void Enable()
-        {
-            Game.OnUpdate += this.OnGameUpdate;
-            Drawing.OnDraw += this.OnDrawingEndScene;
-        }
+        #endregion
+
+        #region Public Methods and Operators
 
         public void Disable()
         {
             Game.OnUpdate -= this.OnGameUpdate;
             Drawing.OnDraw -= this.OnDrawingEndScene;
         }
+
+        public void Enable()
+        {
+            Game.OnUpdate += this.OnGameUpdate;
+            Drawing.OnDraw += this.OnDrawingEndScene;
+        }
+
+        #endregion
+
+        #region Methods
 
         protected override void Initialize()
         {
@@ -82,6 +108,33 @@
             }
         }
 
+        private void OnDrawingEndScene(EventArgs args)
+        {
+            if (ObjectManager.Player.IsDead || Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
+            {
+                return;
+            }
+
+            foreach (
+                var obj in
+                    GankObjects.Where(
+                        c =>
+                        !c.Hero.IsDead && c.Hero.IsValidTarget(this.Range) && c.LastTrigger + this.Duration > Game.Time)
+                )
+            {
+                Drawing.DrawLine(
+                    ObjectManager.Player.Position.WorldToScreen(),
+                    obj.Hero.Position.WorldToScreen(),
+                    8f,
+                    Color.FromArgb(80, obj.Color));
+                if (this.Ping && obj.Hero.IsEnemy && this.lastPing + this.Cooldown * 1000 < Environment.TickCount)
+                {
+                    TacticalMap.ShowPing(PingCategory.Danger, ObjectManager.Player.Position, true);
+                    this.lastPing = Environment.TickCount;
+                }
+            }
+        }
+
         private void OnGameUpdate(EventArgs args)
         {
             if (ObjectManager.Player.IsDead || this.lastCheck + 500f > Environment.TickCount)
@@ -95,9 +148,7 @@
             {
                 var distance = obj.Hero.Distance(ObjectManager.Player);
 
-                if (obj.Distance > this.Range && 
-                    distance <= this.Range && 
-                    Game.Time > obj.LastTrigger + this.Cooldown)
+                if (obj.Distance > this.Range && distance <= this.Range && Game.Time > obj.LastTrigger + this.Cooldown)
                 {
                     obj.LastTrigger = Game.Time;
                 }
@@ -106,42 +157,34 @@
             }
         }
 
-        private void OnDrawingEndScene(EventArgs args)
-        {
-            if (ObjectManager.Player.IsDead || Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
-            {
-                return;
-            }
-
-            foreach (var obj in GankObjects.Where(c => !c.Hero.IsDead && c.Hero.IsValidTarget(this.Range) && c.LastTrigger + this.Duration > Game.Time))
-            {
-                Drawing.DrawLine(ObjectManager.Player.Position.WorldToScreen(), obj.Hero.Position.WorldToScreen(), 8f, Color.FromArgb(80, obj.Color));
-                if (this.Ping && obj.Hero.IsEnemy && this.lastPing + this.Cooldown * 1000 < Environment.TickCount)
-                {
-                    TacticalMap.ShowPing(PingCategory.Danger, ObjectManager.Player.Position, true);
-                    this.lastPing = Environment.TickCount;
-                }
-            }
-        }
+        #endregion
 
         internal class GankObject
         {
+            #region Constructors and Destructors
+
             public GankObject(AIHeroClient hero)
             {
-                bool hasSmite = hero.Spellbook.Spells.Any(spell => spell.Name.ToLower().Contains("smite"));
+                var hasSmite = hero.Spellbook.Spells.Any(spell => spell.Name.ToLower().Contains("smite"));
                 this.Hero = hero;
                 this.Color = hero.IsEnemy
                                  ? (hasSmite ? Color.Purple : Color.Red)
                                  : (hasSmite ? Color.Green : Color.Cyan);
             }
 
-            public AIHeroClient Hero { get; private set; }
+            #endregion
+
+            #region Public Properties
+
+            public Color Color { get; set; }
 
             public float Distance { get; set; }
 
+            public AIHeroClient Hero { get; private set; }
+
             public float LastTrigger { get; set; }
 
-            public Color Color { get; set; }
+            #endregion
         }
     }
 }

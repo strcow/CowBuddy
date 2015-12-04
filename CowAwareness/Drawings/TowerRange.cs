@@ -1,9 +1,10 @@
 ﻿namespace CowAwareness.Drawings
 {
+    using System;
     using System.Drawing;
     using System.Linq;
 
-    using CowLibrary.Addons;
+    using CowAwareness.Features;
 
     using EloBuddy;
     using EloBuddy.SDK;
@@ -11,6 +12,8 @@
 
     public class TowerRange : Feature, IToggleFeature
     {
+        #region Public Properties
+
         public override string Name
         {
             get
@@ -19,24 +22,34 @@
             }
         }
 
-        public void Enable()
-        {
-            Drawing.OnDraw += this.Drawing_OnDraw;
-        }
+        #endregion
+
+        #region Public Methods and Operators
 
         public void Disable()
         {
             Drawing.OnDraw -= this.Drawing_OnDraw;
         }
 
+        public void Enable()
+        {
+            Drawing.OnDraw += this.Drawing_OnDraw;
+        }
+
+        #endregion
+
+        #region Methods
+
         protected override void Initialize()
         {
             this.Menu.AddLabel("Draws enemy turrets' range indicators");
         }
 
-        private void Drawing_OnDraw(System.EventArgs args)
+        private void Drawing_OnDraw(EventArgs args)
         {
-            foreach (var turret in EntityManager.Turrets.Enemies.Where(a => !a.IsDead && ObjectManager.Player.Distance(a) <= 2000))
+            foreach (
+                var turret in
+                    EntityManager.Turrets.Enemies.Where(a => !a.IsDead && ObjectManager.Player.Distance(a) <= 2000))
             {
                 if (ObjectManager.Player.Distance(turret) <= 870)
                 {
@@ -50,8 +63,9 @@
                 {
                     new Circle { Color = Color.White, Radius = 870, BorderWidth = 2f }.Draw(turret.Position);
                 }
-
             }
         }
+
+        #endregion
     }
 }

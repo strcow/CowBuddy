@@ -1,26 +1,43 @@
 ﻿namespace CowAwareness.Drawings
 {
-    using CowLibrary.Addons;
+    using CowAwareness.Features;
+
+    using EloBuddy;
 
     public class WatermarkDisabler : Feature, IToggleFeature
     {
+        #region Public Properties
+
         public override string Name
         {
-            get { return "Disable EB Watermark"; }
+            get
+            {
+                return "Disable EB Watermark";
+            }
+        }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        public void Disable()
+        {
+            Hacks.RenderWatermark = true;
         }
 
         public void Enable()
         {
-            EloBuddy.Hacks.RenderWatermark = false;
+            Hacks.RenderWatermark = false;
         }
 
-        public void Disable()
-        {
-            EloBuddy.Hacks.RenderWatermark = true;
-        }
+        #endregion
+
+        #region Methods
 
         protected override void Initialize()
         {
         }
+
+        #endregion
     }
 }

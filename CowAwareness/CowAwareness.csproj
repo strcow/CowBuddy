@@ -48,10 +48,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CowLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\CowLibrary\bin\Debug\CowLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="EloBuddy">
       <HintPath>..\..\..\..\..\Program Files (x86)\EloBuddy\System\EloBuddy.dll</HintPath>
     </Reference>
@@ -80,6 +76,9 @@
     <Compile Include="Detectors\Clone.cs" />
     <Compile Include="Drawings\TowerRange.cs" />
     <Compile Include="Drawings\WatermarkDisabler.cs" />
+    <Compile Include="Features\Addon.cs" />
+    <Compile Include="Features\Feature.cs" />
+    <Compile Include="Features\IToggleFeature.cs" />
     <Compile Include="Trackers\Cooldown.cs" />
     <Compile Include="Trackers\Teleport.cs" />
     <Compile Include="Trackers\Ward.cs" />

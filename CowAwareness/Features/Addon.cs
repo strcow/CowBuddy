@@ -1,4 +1,4 @@
-﻿namespace CowLibrary.Addons
+﻿namespace CowAwareness.Features
 {
     using System;
     using System.Collections.Generic;
@@ -8,8 +8,15 @@
 
     public class Addon
     {
-        private readonly HashSet<Feature> features = new HashSet<Feature>();
+        #region Fields
+
         private readonly string addonName;
+
+        private readonly HashSet<Feature> features = new HashSet<Feature>();
+
+        #endregion
+
+        #region Constructors and Destructors
 
         public Addon(string name)
         {
@@ -17,17 +24,37 @@
             Loading.OnLoadingComplete += this.Loading_OnLoadingComplete;
         }
 
+        #endregion
+
+        #region Delegates
+
         public delegate void MenuInitializedEventHandler(Menu menu);
+
+        #endregion
+
+        #region Public Events
 
         public event MenuInitializedEventHandler MenuInitialized;
 
+        #endregion
+
+        #region Public Properties
+
         public Menu Menu { get; private set; }
+
+        #endregion
+
+        #region Public Methods and Operators
 
         public Addon Add(Feature feat)
         {
             this.features.Add(feat);
             return this;
         }
+
+        #endregion
+
+        #region Methods
 
         private void Loading_OnLoadingComplete(EventArgs args)
         {
@@ -47,5 +74,7 @@
                 this.MenuInitialized(menu);
             }
         }
+
+        #endregion
     }
 }

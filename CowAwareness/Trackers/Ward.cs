@@ -5,23 +5,31 @@
     using System.Drawing;
     using System.Linq;
 
-    using CowLibrary.Addons;
+    using CowAwareness.Features;
 
     using EloBuddy;
-    using EloBuddy.SDK;
     using EloBuddy.SDK.Menu.Values;
     using EloBuddy.SDK.Rendering;
 
     using SharpDX;
 
     using Color = System.Drawing.Color;
-    using Font = System.Drawing.Font;
 
     public class Ward : Feature, IToggleFeature
     {
+        #region Static Fields
+
         private static List<WardInfo> wards = new List<WardInfo>();
 
+        #endregion
+
+        #region Fields
+
         private Text text;
+
+        #endregion
+
+        #region Public Properties
 
         public override string Name
         {
@@ -30,6 +38,10 @@
                 return "Ward Tracker";
             }
         }
+
+        #endregion
+
+        #region Public Methods and Operators
 
         public void Disable()
         {
@@ -45,11 +57,69 @@
             GameObject.OnDelete += this.GameObject_OnDelete;
         }
 
+        #endregion
+
+        #region Methods
+
         protected override void Initialize()
         {
             this.Menu.Add("timer", new CheckBox("Draw remaining time"));
             this.Menu.Add("range", new KeyBind("Draw wards range", false, KeyBind.BindTypes.HoldActive, 'Z'));
             this.text = new Text(string.Empty, new Font(FontFamily.GenericSansSerif, 11f, FontStyle.Bold));
+        }
+
+        private void Drawing_OnDraw(EventArgs args)
+        {
+            var removeList = new List<WardInfo>();
+
+            foreach (var wardInfo in wards)
+            {
+                if (!wardInfo.Available)
+                {
+                    removeList.Add(wardInfo);
+                    continue;
+                }
+
+                var buff = wardInfo.Ward.Buffs.FirstOrDefault();
+
+                if (buff == null)
+                {
+                    removeList.Add(wardInfo);
+                    continue;
+                }
+
+                var remaining = buff.EndTime - Game.Time;
+
+                if (remaining > 0 || wardInfo.IsPink)
+                {
+                    var radius = this["range"].Cast<KeyBind>().CurrentValue ? 1100 : 60;
+
+                    new Circle { Color = wardInfo.Color, Radius = radius, BorderWidth = 1f }.Draw(wardInfo.Position);
+
+                    if (this["timer"].Cast<CheckBox>().CurrentValue)
+                    {
+                        var location = Drawing.WorldToScreen(wardInfo.Position);
+
+                        if (!wardInfo.IsPink)
+                        {
+                            this.text.Draw(
+                                string.Format("{0:0}", remaining),
+                                Color.White,
+                                (int)location.X,
+                                (int)location.Y);
+                        }
+                    }
+                }
+                else
+                {
+                    removeList.Add(wardInfo);
+                }
+            }
+
+            if (removeList.Any())
+            {
+                wards = wards.Except(removeList).ToList();
+            }
         }
 
         private void GameObject_OnCreate(GameObject sender, EventArgs args)
@@ -89,62 +159,12 @@
             }
         }
 
-        private void Drawing_OnDraw(EventArgs args)
-        {
-            var removeList = new List<WardInfo>();
-
-            foreach (var wardInfo in wards)
-            {
-                if (!wardInfo.Available)
-                {
-                    removeList.Add(wardInfo);
-                    continue;
-                }
-
-                var buff = wardInfo.Ward.Buffs.FirstOrDefault();
-
-                if (buff == null)
-                {
-                    removeList.Add(wardInfo);
-                    continue;
-                }
-
-                var remaining = buff.EndTime - Game.Time;
-
-                if (remaining > 0 || wardInfo.IsPink)
-                {
-                    int radius = this["range"].Cast<KeyBind>().CurrentValue ? 1100 : 60;
-                    
-                    new Circle { Color = wardInfo.Color, Radius = radius, BorderWidth = 1f }.Draw(wardInfo.Position);
-
-                    if (this["timer"].Cast<CheckBox>().CurrentValue)
-                    {
-                        var location = Drawing.WorldToScreen(wardInfo.Position);
-
-                        if (!wardInfo.IsPink)
-                        {
-                            this.text.Draw(
-                                string.Format("{0:0}", remaining),
-                                Color.White,
-                                (int)location.X,
-                                (int)location.Y);
-                        }
-                    }
-                }
-                else
-                {
-                    removeList.Add(wardInfo);
-                }
-            }
-
-            if (removeList.Any())
-            {
-                wards = wards.Except(removeList).ToList();
-            }
-        }
+        #endregion
 
         internal class WardInfo
         {
+            #region Constructors and Destructors
+
             public WardInfo(Obj_AI_Minion ward, bool isPink)
             {
                 this.Ward = ward;
@@ -154,15 +174,21 @@
                 this.IsPink = isPink;
             }
 
-            public Obj_AI_Minion Ward { get; set; }
+            #endregion
 
-            public bool IsPink { get; set; }
+            #region Public Properties
+
+            public bool Available { get; set; }
 
             public Color Color { get; set; }
 
+            public bool IsPink { get; set; }
+
             public Vector3 Position { get; set; }
 
-            public bool Available { get; set; }
+            public Obj_AI_Minion Ward { get; set; }
+
+            #endregion
         }
     }
 }

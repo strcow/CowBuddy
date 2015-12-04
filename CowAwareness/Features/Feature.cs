@@ -1,21 +1,31 @@
-﻿namespace CowLibrary.Addons
+﻿namespace CowAwareness.Features
 {
     using EloBuddy.SDK.Menu;
     using EloBuddy.SDK.Menu.Values;
 
     public abstract class Feature
     {
-        public abstract string Name { get; }
+        #region Public Properties
 
         public Menu Menu { get; private set; }
 
-        protected ValueBase this[string menuItem]
+        public abstract string Name { get; }
+
+        #endregion
+
+        #region Public Indexers
+
+        public ValueBase this[string menuItem]
         {
             get
             {
                 return this.Menu[menuItem];
             }
         }
+
+        #endregion
+
+        #region Public Methods and Operators
 
         public virtual void Load(Addon owner)
         {
@@ -32,26 +42,32 @@
             this.Initialize();
         }
 
+        #endregion
+
+        #region Methods
+
         protected abstract void Initialize();
 
         private void ToggleFeatureLoad(IToggleFeature toggleFeature)
         {
             this.Menu.Add(this.Name + "enabled", new CheckBox("Enabled")).OnValueChange += (sender, args) =>
-            {
-                if (args.NewValue)
                 {
-                    toggleFeature.Enable();
-                }
-                else
-                {
-                    toggleFeature.Disable();
-                }
-            };
+                    if (args.NewValue)
+                    {
+                        toggleFeature.Enable();
+                    }
+                    else
+                    {
+                        toggleFeature.Disable();
+                    }
+                };
 
             if (this[this.Name + "enabled"].Cast<CheckBox>().CurrentValue)
             {
                 toggleFeature.Enable();
             }
         }
+
+        #endregion
     }
 }
